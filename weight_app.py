@@ -9,13 +9,11 @@ from PIL import Image
 plt.rcParams['font.family'] = 'sans-serif'
 plt.rcParams['axes.unicode_minus'] = False
 
-st.set_page_config(page_title="Weight & Photo Tracker", layout="centered")
+st.set_page_config(page_title="โปรแกรมติดตามน้ำหนัก", layout="centered")
 
-st.title("🏃‍♂️ โปรแกรมติดตามน้ำหนักเอส")
-st.write("เป้าหมายลดน้ำหนักจาก 102 kg สู่ 90 kg เพื่อสุขภาพที่ดีขึ้น!")
+st.title("🏃‍♂️ โปรแกรมติดตามน้ำหนัก คุณ เอส")
+st.write("บันทึกค่าน้ำหนักประจำวัน อัปโหลดรูปภาพ และติดตามเป้าหมายของคุณ")
 
-START_WEIGHT = 102.0
-TARGET_WEIGHT = 90.0
 FILE_NAME = "weight_history.csv"
 IMAGE_DIR = "weight_photos"
 
@@ -26,53 +24,53 @@ if not os.path.exists(IMAGE_DIR):
     except:
         pass
 
-# ฟังก์ชันสำหรับโหลดข้อมูล (ปรับให้จำลองประวัติวันแรกเพื่อเปรียบเทียบรูปภาพได้ทันที)
+# ฟังก์ชันสำหรับโหลดข้อมูล (ปรับรหัสไฟล์ให้ Excel ภาษาไทยอ่านออกร้อยเปอร์เซ็นต์)
 def load_data():
     if os.path.exists(FILE_NAME):
         try:
-            return pd.read_csv(FILE_NAME)
+            return pd.read_csv(FILE_NAME, encoding='utf-8-sig')
         except:
-            pass
+            try:
+                return pd.read_csv(FILE_NAME)
+            except:
+                pass
     
-    # ถ้าเปิดใช้ครั้งแรก ให้สร้างประวัติวันแรกสแตนด์บายไว้คู่กับภาพตั้งต้น
+    # ข้อมูลเริ่มต้นครั้งแรกสุด
     initial_data = {
-        "วันที่": ["2026-05-11", datetime.now().strftime("%Y-%m-%d")],
-        "น้ำหนัก (kg)": [START_WEIGHT, START_WEIGHT],
-        "ชื่อรูปภาพ": ["first_day.png", "none"]
+        "วันที่": [datetime.now().strftime("%Y-%m-%d")],
+        "น้ำหนักปัจจุบัน": [102.0],
+        "น้ำหนักเป้าหมาย": [90.0],
+        "ชื่อรูปภาพ": ["none"]
     }
     df = pd.DataFrame(initial_data)
-    df.to_csv(FILE_NAME, index=False)
+    df.to_csv(FILE_NAME, index=False, encoding='utf-8-sig')
     return df
 
 df = load_data()
-if "ชื่อรูปภาพ" not in df.columns:
-    df["ชื่อรูปภาพ"] = "none"
 
-current_weight = float(df["น้ำหนัก (kg)"].iloc[-1])
+# ตรวจสอบชื่อคอลัมน์ให้ถูกต้องและเป็นระบบเดียวกันทั้งหมด
+df.columns = ["วันที่", "น้ำหนักปัจจุบัน", "น้ำหนักเป้าหมาย", "ชื่อรูปภาพ"] if len(df.columns) == 4 else df.columns
 
-# ส่วนที่ 1: แสดงสถานะปัจจุบัน
-col1, col2, col3 = st.columns(3)
-lost_so_far = START_WEIGHT - current_weight
-progress_percent = min(max(lost_so_far / (START_WEIGHT - TARGET_WEIGHT), 0.0), 1.0)
+last_row = df.iloc[-1]
+saved_current = float(last_row["น้ำหนักปัจจุบัน"])
+saved_target = float(last_row["น้ำหนักเป้าหมาย"])
 
-with col1:
-    st.metric(label="น้ำหนักเริ่มต้น", value=f"{START_WEIGHT} kg")
-with col2:
-    st.metric(label="น้ำหนักปัจจุบัน", value=f"{current_weight} kg", delta=f"-{lost_so_far:.1f} kg" if lost_so_far >= 0 else f"+{abs(lost_so_far):.1f} kg")
-with col3:
-    st.metric(label="เป้าหมาย", value=f"{TARGET_WEIGHT} kg")
-
-st.write(f"**ความคืบหน้าสู่เป้าหมาย:** {progress_percent*100:.1f}%")
-st.progress(progress_percent)
 st.write("---")
 
-# ส่วนที่ 2: ฟอร์มกรอกน้ำหนักและอัปโหลดรูปถ่ายประจำวัน
-st.subheader("📝 บันทึกประวัติประจำวัน")
+# ส่วนที่ 1: ฟอร์มกรอกข้อมูลตามที่คุณเอสต้องการ (น้ำหนักปัจจุบัน และ น้ำหนักเป้าหมาย)
+st.subheader("📝 บันทึกข้อมูลประจำวัน")
 date_input = st.date_input("เลือกวันที่บันทึก:", datetime.now())
-new_weight = st.number_input("กรอกน้ำหนักวันนี้ (kg):", min_value=30.0, max_value=200.0, value=current_weight, step=0.1)
-uploaded_file = st.file_uploader("📸 แนบรูปถ่ายหุ่นของคุณวันนี้ เพื่อดูเปรียบเทียบสัดส่วนด้านล่าง:", type=["jpg", "jpeg", "png"])
 
-if st.button("💾 กดบันทึกข้อมูลและรูปภาพลงเครื่อง"):
+col_input1, col_input2 = st.columns(2)
+with col_input1:
+    new_weight = st.number_input("กรอกน้ำหนักปัจจุบัน (kg):", min_value=30.0, max_value=200.0, value=saved_current, step=0.1)
+with col_input2:
+    new_target = st.number_input("กรอกน้ำหนักเป้าหมาย (kg):", min_value=30.0, max_value=200.0, value=saved_target, step=0.1)
+
+# ช่องแนบรูปภาพถ่ายรูปร่าง
+uploaded_file = st.file_uploader("📸 แนบรูปถ่ายรูปร่างของคุณวันนี้:", type=["jpg", "jpeg", "png"])
+
+if st.button("💾 กดบันทึกข้อมูล"):
     formatted_date = date_input.strftime("%Y-%m-%d")
     image_name = "none"
     
@@ -86,41 +84,52 @@ if st.button("💾 กดบันทึกข้อมูลและรูป�
             image_name = "none"
     
     if formatted_date in df["วันที่"].values:
-        df.loc[df["วันที่"] == formatted_date, "น้ำหนัก (kg)"] = new_weight
+        df.loc[df["วันที่"] == formatted_date, "น้ำหนักปัจจุบัน"] = new_weight
+        df.loc[df["วันที่"] == formatted_date, "น้ำหนักเป้าหมาย"] = new_target
         if image_name != "none":
             df.loc[df["วันที่"] == formatted_date, "ชื่อรูปภาพ"] = image_name
     else:
-        new_row = pd.DataFrame({"วันที่": [formatted_date], "น้ำหนัก (kg)": [new_weight], "ชื่อรูปภาพ": [image_name]})
+        new_row = pd.DataFrame({
+            "วันที่": [formatted_date], 
+            "น้ำหนักปัจจุบัน": [new_weight], 
+            "น้ำหนักเป้าหมาย": [new_target], 
+            "ชื่อรูปภาพ": [image_name]
+        })
         df = pd.concat([df, new_row], ignore_index=True)
         
-    df.to_csv(FILE_NAME, index=False)
+    df.to_csv(FILE_NAME, index=False, encoding='utf-8-sig')
     st.success("บันทึกข้อมูลเรียบร้อยแล้ว!")
     st.rerun()
 
 st.write("---")
 
+# ส่วนที่ 2: แสดงสถานะล่าสุดในปัจจุบัน
+st.subheader("📊 สถานะปัจจุบัน")
+col1, col2 = st.columns(2)
+with col1:
+    st.metric(label="น้ำหนักปัจจุบันล่าสุด", value=f"{saved_current} kg")
+with col2:
+    st.metric(label="น้ำหนักเป้าหมายที่ตั้งไว้", value=f"{saved_target} kg")
+
+st.write("---")
+
 # ส่วนที่ 3: Photo Trend เปรียบเทียบรูปร่าง อดีต-ปัจจุบัน
-st.subheader("🖼️ Photo Trend (เปรียบเทียบพัฒนาการรูปร่างของคุณเอส)")
+st.subheader("🖼️ พัฒนาการรูปร่าง (Photo Trend)")
 images_with_photos = df[(df["ชื่อรูปภาพ"].notna()) & (df["ชื่อรูปภาพ"] != "none") & (df["ชื่อรูปภาพ"] != "")]
 
 if len(images_with_photos) >= 1:
     col_old, col_new = st.columns(2)
-    
-    # 1. แสดงรูปภาพปัจจุบันล่าสุดที่คุณเอสเพิ่งอัปโหลด
     newest_row = images_with_photos.iloc[-1]
-    new_img_path = os.path.join(IMAGE_DIR, newest_row["ชื่อรูปภาพ"])
     
     with col_old:
-        st.info("📊 พัฒนาการสัดส่วน")
-        st.write(f"**สถิติวันแรก (102 kg):** รูปร่างตั้งต้นตอนเริ่มโปรแกรม")
-        # สร้างตัวช่วยจำลองภาพวันแรกหากระบบคลาวด์ยังไม่มีไฟล์รูปภาพ
+        st.info("📊 พัฒนาการสัดส่วนของคุณเอส")
         if uploaded_file is not None:
             with col_new:
-                st.image(uploaded_file, caption=f"รูปร่างล่าสุด ({newest_row['วันที่']}) | {newest_row['น้ำหนัก (kg)']} kg", use_container_width=True)
+                st.image(uploaded_file, caption=f"รูปร่างปัจจุบันล่าสุด ({newest_row['วันที่']})", use_container_width=True)
         else:
-            st.write("📸 *กรอกน้ำหนักและเลือกรูปภาพด้านบน จากนั้นกดปุ่มบันทึก เพื่อดูรูปหุ่นเปรียบเทียบตรงนี้ได้ทันทีครับ*")
+            st.write("📸 *แนบรูปภาพด้านบนแล้วกดปุ่มบันทึก เพื่อดูรูปหุ่นเปรียบเทียบตรงนี้ได้ทันทีครับ*")
 else:
-    st.info("💡 กรอกข้อมูลน้ำหนักและอัปโหลดรูปภาพด้านบน เพื่อดูระบบเปรียบเทียบรูปร่างตรงนี้ได้เลยครับ")
+    st.info("💡 แนบรูปถ่ายรูปร่างของคุณวันนี้ด้านบน เพื่อดูระบบเปรียบเทียบรูปร่างตรงนี้ได้เลยครับ")
 
 st.write("---")
 
@@ -128,8 +137,8 @@ st.write("---")
 st.subheader("📈 กราฟแสดงแนวโน้มน้ำหนัก")
 if len(df) > 0:
     fig, ax = plt.subplots(figsize=(8, 4))
-    ax.plot(df["วันที่"], df["น้ำหนัก (kg)"], marker='o', color='#FF4B4B', linewidth=2, label="Your Weight")
-    ax.axhline(y=TARGET_WEIGHT, color='green', linestyle='--', label="Target (90 kg)")
+    ax.plot(df["วันที่"], df["น้ำหนักปัจจุบัน"], marker='o', color='#FF4B4B', linewidth=2, label="Your Weight")
+    ax.plot(df["วันที่"], df["น้ำหนักเป้าหมาย"], color='green', linestyle='--', label="Target Weight")
     ax.set_ylabel("Weight (kg)")
     plt.xticks(rotation=45)
     ax.grid(axis='y', linestyle=':', alpha=0.6)
