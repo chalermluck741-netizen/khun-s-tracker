@@ -11,7 +11,7 @@ plt.rcParams['axes.unicode_minus'] = False
 
 st.set_page_config(page_title="Weight & Photo Tracker", layout="centered")
 
-st.title("🏃‍♂️ โปรแกรมติดตามน้ำหนัก คุณ เอส")
+st.title("🏃‍♂️ โปรแกรมติดตามน้ำหนัก เอส")
 st.write("เป้าหมายลดน้ำหนักจาก 102 kg สู่ 90 kg เพื่อสุขภาพที่ดีขึ้น!")
 
 START_WEIGHT = 102.0
