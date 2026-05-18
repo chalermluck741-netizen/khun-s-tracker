@@ -6,7 +6,7 @@ from datetime import datetime
 from PIL import Image
 
 # ตั้งค่าฟอนต์ภาษาไทยสำหรับกราฟ
-plt.rcParams['font.family'] = 'Tahoma'
+plt.rcParams['font.family'] = 'sans-serif'
 plt.rcParams['axes.unicode_minus'] = False
 
 st.set_page_config(page_title="Weight & Photo Loss Tracker", layout="centered")
