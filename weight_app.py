@@ -5,34 +5,15 @@ import os
 from datetime import datetime
 from PIL import Image
 
-# ตั้งค่าฟอนต์ภาษาไทยสำหรับกราฟ
-# ระบบดาวน์โหลดและติดตั้งฟอนต์ภาษาไทยสากลสำหรับแสดงผลบนเว็บออนไลน์
-import matplotlib as mpl
-import urllib.request
-
-try:
-    font_url = "https://github.com/Phonbopit/sarabun-webfont/raw/master/fonts/thsarabunnew-webfont.ttf"
-    font_path = "thsarabunnew-webfont.ttf"
-    if not os.path.exists(font_path):
-        urllib.request.urlretrieve(font_url, font_path)
-    mpl.font_manager.fontManager.addfont(font_path)
-    plt.rcParams['font.family'] = 'TH Sarabun New'
-
-except:
-    plt.rcParams['font.family'] = 'sans-serif'
-
+# ตั้งค่าฟอนต์สากลเพื่อป้องกันกรอบสี่เหลี่ยมพังบนอินเทอร์เน็ต
+plt.rcParams['font.family'] = 'sans-serif'
 plt.rcParams['axes.unicode_minus'] = False
 
-
-
 st.set_page_config(page_title="Weight & Photo Loss Tracker", layout="centered")
+
+# หัวข้อหลักภาษาไทยโฉมใหม่ของคุณเอส
 st.title("🏃‍♂️ โปรแกรมติดตามน้ำหนัก คุณ เอส")
-
-
 st.write("เป้าหมายลดน้ำหนักจาก 102 kg สู่ 90 kg เพื่อสุขภาพที่ดีขึ้น!")
-
-
-st.write("บันทึกน้ำหนัก อัปโหลดภาพถ่าย และติดตามพัฒนาการของคุณอย่างใกล้ชิด!")
 
 START_WEIGHT = 102.0
 TARGET_WEIGHT = 90.0
@@ -62,7 +43,7 @@ def load_data():
 
 df = load_data()
 
-# ตรวจสอบว่ามีคอลัมน์ชื่อรูปภาพไหม ถ้าไม่มีให้สร้างเพิ่ม
+# ตรวจสอบความสมบูรณ์ของตารางข้อมูล
 if "ชื่อรูปภาพ" not in df.columns:
     df["ชื่อรูปภาพ"] = "none"
 
@@ -128,28 +109,26 @@ if len(images_with_photos) >= 2:
     old_img_path = os.path.join(IMAGE_DIR, oldest_row["ชื่อรูปภาพ"])
     if os.path.exists(old_img_path):
         with col_old:
-            st.image(old_img_path, caption=f"วันแรกสุด ({oldest_row['วันที่']}) | {oldest_row['น้ำหนัก (kg)']} kg", use_container_width=True)
+            st.image(old_img_path, caption=f"First Day ({oldest_row['วันที่']}) | {oldest_row['น้ำหนัก (kg)']} kg", use_container_width=True)
             
     # รูปปัจจุบันล่าสุด
     newest_row = images_with_photos.iloc[-1]
-    new_img_path = os.path.join(IMAGE_DIR, newest_row["# เพื่อความปลอดภัยของโมเดล"])
     new_img_path = os.path.join(IMAGE_DIR, newest_row["ชื่อรูปภาพ"])
     if os.path.exists(new_img_path):
         with col_new:
-            st.image(new_img_path, caption=f"ล่าสุดวันนี้ ({newest_row['วันที่']}) | {newest_row['น้ำหนัก (kg)']} kg", use_container_width=True)
+            st.image(new_img_path, caption=f"Latest Day ({newest_row['วันที่']}) | {newest_row['น้ำหนัก (kg)']} kg", use_container_width=True)
 else:
     st.info("💡 เมื่อคุณอัปโหลดรูปภาพสะสมตั้งแต่ 2 วันขึ้นไป ระบบจะดึงรูปวันแรกและวันล่าสุดมาเปรียบเทียบความฟิตให้ตรงนี้อัตโนมัติครับ!")
 
 st.write("---")
 
-# ส่วนที่ 4: แสดงกราฟแนวโน้มน้ำหนัก
+# ส่วนที่ 4: แสดงกราฟแนวโน้มน้ำหนัก (ปรับคำเป็นภาษาอังกฤษเพื่อแก้ปัญหากรอบสี่เหลี่ยมพัง)
 st.subheader("📈 กราฟแสดงแนวโน้มน้ำหนัก")
 if len(df) > 0:
-    
-
-    ax.plot(df["วันที่"], df["น้ำหนัก (kg)"], marker='o', color='#FF4B4B', linewidth=2, label="น้ำหนักของคุณ")
-    ax.axhline(y=TARGET_WEIGHT, color='green', linestyle='--', label="เส้นเป้าหมาย (90 kg)")
-    ax.set_ylabel("น้ำหนัก (kg)")
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.plot(df["วันที่"], df["น้ำหนัก (kg)"], marker='o', color='#FF4B4B', linewidth=2, label="Your Weight")
+    ax.axhline(y=TARGET_WEIGHT, color='green', linestyle='--', label="Target (90 kg)")
+    ax.set_ylabel("Weight (kg)")
     plt.xticks(rotation=45)
     ax.grid(axis='y', linestyle=':', alpha=0.6)
     ax.legend()
