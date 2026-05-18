@@ -6,8 +6,23 @@ from datetime import datetime
 from PIL import Image
 
 # ตั้งค่าฟอนต์ภาษาไทยสำหรับกราฟ
-plt.rcParams['font.family'] = 'sans-serif'
+# ระบบดาวน์โหลดและติดตั้งฟอนต์ภาษาไทยสากลสำหรับแสดงผลบนเว็บออนไลน์
+import matplotlib as mpl
+import urllib.request
+
+try:
+    font_url = "https://github.com/Phonbopit/sarabun-webfont/raw/master/fonts/thsarabunnew-webfont.ttf"
+    font_path = "thsarabunnew-webfont.ttf"
+    if not os.path.exists(font_path):
+        urllib.request.urlretrieve(font_url, font_path)
+    mpl.font_manager.fontManager.addfont(font_path)
+    plt.rcParams['font.family'] = 'TH Sarabun New'
+except:
+    plt.rcParams['font.family'] = 'sans-serif'
+
 plt.rcParams['axes.unicode_minus'] = False
+
+
 
 st.set_page_config(page_title="Weight & Photo Loss Tracker", layout="centered")
 st.title("🏃‍♂️ โปรแกรมติดตามน้ำหนัก คุณ เอส")
