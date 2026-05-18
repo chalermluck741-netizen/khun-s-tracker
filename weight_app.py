@@ -17,6 +17,7 @@ try:
         urllib.request.urlretrieve(font_url, font_path)
     mpl.font_manager.fontManager.addfont(font_path)
     plt.rcParams['font.family'] = 'TH Sarabun New'
+
 except:
     plt.rcParams['font.family'] = 'sans-serif'
 
