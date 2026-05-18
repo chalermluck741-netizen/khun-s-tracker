@@ -145,7 +145,8 @@ st.write("---")
 # ส่วนที่ 4: แสดงกราฟแนวโน้มน้ำหนัก
 st.subheader("📈 กราฟแสดงแนวโน้มน้ำหนัก")
 if len(df) > 0:
-    fig, ax = plt.subplots(figsize=(8, 4))
+    
+
     ax.plot(df["วันที่"], df["น้ำหนัก (kg)"], marker='o', color='#FF4B4B', linewidth=2, label="น้ำหนักของคุณ")
     ax.axhline(y=TARGET_WEIGHT, color='green', linestyle='--', label="เส้นเป้าหมาย (90 kg)")
     ax.set_ylabel("น้ำหนัก (kg)")
